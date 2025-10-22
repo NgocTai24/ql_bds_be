@@ -8,14 +8,15 @@ import vn.com.bds.domain.model.PostStatus; // Import Enum
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Entity
 @Table(name = "posts")
 public class PostEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID) // <-- Bảo DB tự sinh UUID
+    private UUID id;
 
     @Column(nullable = false)
     private String title;

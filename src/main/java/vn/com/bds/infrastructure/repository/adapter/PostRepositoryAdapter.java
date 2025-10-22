@@ -12,6 +12,7 @@ import vn.com.bds.infrastructure.repository.mapper.PostMapper;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Repository
@@ -28,7 +29,7 @@ public class PostRepositoryAdapter implements PostRepository {
     }
 
     @Override
-    public Optional<Post> findById(Long id) {
+    public Optional<Post> findById(UUID id) { // <-- Sửa thành UUID
         return springDataRepository.findById(id).map(PostMapper::toDomain);
     }
 
@@ -40,7 +41,7 @@ public class PostRepositoryAdapter implements PostRepository {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(UUID id) { // <-- Sửa thành UUID
         springDataRepository.deleteById(id);
     }
 }

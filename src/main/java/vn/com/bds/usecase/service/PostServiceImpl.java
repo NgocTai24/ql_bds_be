@@ -3,23 +3,17 @@ package vn.com.bds.usecase.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import vn.com.bds.domain.model.ListingType;
-import vn.com.bds.domain.model.Post;
-import vn.com.bds.domain.model.PostStatus;
-import vn.com.bds.domain.model.PropertyType;
-import vn.com.bds.domain.model.User;
-import vn.com.bds.domain.repository.ListingTypeRepository;
-import vn.com.bds.domain.repository.PostRepository;
-import vn.com.bds.domain.repository.PropertyTypeRepository;
-import vn.com.bds.domain.repository.UserRepository;
+import vn.com.bds.domain.model.*; // Import domain models
+import vn.com.bds.domain.repository.*; // Import repositories
 import vn.com.bds.usecase.CreatePostUseCase;
+import vn.com.bds.domain.exception.ResourceNotFoundException; // Import exception
+import java.util.UUID; // <-- Import UUID
 
-@Service // <-- ĐÂY LÀ DÒNG QUAN TRỌNG NHẤT
+@Service
 @RequiredArgsConstructor
 @Transactional
 public class PostServiceImpl implements CreatePostUseCase {
 
-    // Inject các "cổng" (interface) từ DOMAIN
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final ListingTypeRepository listingTypeRepository;
@@ -27,32 +21,33 @@ public class PostServiceImpl implements CreatePostUseCase {
 
     @Override
     public Post execute(CreatePostCommand command) {
-        // --- Đây là nơi chứa logic nghiệp vụ ---
 
-        // 1. Kiểm tra sự tồn tại của các đối tượng liên quan
+        // 1. Find related entities
         User user = userRepository.findById(command.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + command.getUserId()));
 
-        ListingType listingType = listingTypeRepository.findById(command.getListingTypeId())
-                .orElseThrow(() -> new RuntimeException("Listing type not found"));
+        // --- CHANGE THESE LINES ---
+        ListingType listingType = listingTypeRepository.findById(command.getListingTypeId()) // Use UUID
+                .orElseThrow(() -> new ResourceNotFoundException("Listing type not found: " + command.getListingTypeId()));
 
-        PropertyType propertyType = propertyTypeRepository.findById(command.getPropertyTypeId())
-                .orElseThrow(() -> new RuntimeException("Property type not found"));
+        PropertyType propertyType = propertyTypeRepository.findById(command.getPropertyTypeId()) // Use UUID
+                .orElseThrow(() -> new ResourceNotFoundException("Property type not found: " + command.getPropertyTypeId()));
+        // --------------------------
 
-        // 2. Xây dựng đối tượng Post (Domain Model)
+        // 2. Build Post model
         Post post = Post.builder()
                 .title(command.getTitle())
                 .description(command.getDescription())
                 .address(command.getAddress())
                 .price(command.getPrice())
                 .squareMeters(command.getSquareMeters())
-                .status(PostStatus.PENDING_APPROVAL) // Logic: bài mới luôn phải chờ duyệt
+                .status(PostStatus.PENDING_APPROVAL)
                 .user(user)
                 .listingType(listingType)
                 .propertyType(propertyType)
                 .build();
 
-        // 3. Dùng "cổng" repository để lưu
+        // 3. Save Post
         return postRepository.save(post);
     }
 }

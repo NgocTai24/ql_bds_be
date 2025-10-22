@@ -46,7 +46,7 @@ public class AuthServiceImpl implements RegisterUserUseCase, LoginUserUseCase, L
                 .email(command.getEmail())
                 .password(passwordEncoder.encode(command.getPassword()))
                 .phone(command.getPhone())
-                .role(Role.USER)
+                .role(Role.ADMIN)
                 .build();
 
         // 1. Lưu user và LẤY LẠI user đã lưu (có ID)

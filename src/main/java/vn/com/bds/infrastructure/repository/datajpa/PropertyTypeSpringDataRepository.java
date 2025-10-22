@@ -2,12 +2,11 @@ package vn.com.bds.infrastructure.repository.datajpa;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import vn.com.bds.infrastructure.repository.entity.PropertyTypeEntity;
-
 import java.util.List;
+import java.util.UUID; // <-- Import
 
-public interface PropertyTypeSpringDataRepository extends JpaRepository<PropertyTypeEntity, Integer> {
-
-    // Spring Data JPA sẽ tự động tạo query
-    // để tìm các PropertyTypeEntity dựa trên trường listingType.id
-    List<PropertyTypeEntity> findByListingTypeId(Integer listingTypeId);
+// Change generic type to UUID
+public interface PropertyTypeSpringDataRepository extends JpaRepository<PropertyTypeEntity, UUID> {
+    // Change parameter type to UUID
+    List<PropertyTypeEntity> findByListingTypeId(UUID listingTypeId);
 }

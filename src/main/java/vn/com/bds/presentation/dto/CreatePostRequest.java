@@ -1,17 +1,17 @@
 package vn.com.bds.presentation.dto;
 
-
 import lombok.Data;
+import java.math.BigDecimal;
+import java.util.UUID; // <-- Import
 
-// DTO này ánh xạ với JSON request từ client (Postman)
 @Data
 public class CreatePostRequest {
     private String title;
     private String description;
     private String address;
-    private java.math.BigDecimal price;
+    private BigDecimal price; // Use BigDecimal
     private Double squareMeters;
-    private Long userId; // Tạm thời truyền userId, sau này sẽ lấy từ Token
-    private Integer listingTypeId;
-    private Integer propertyTypeId;
+    private Long userId;
+    private UUID listingTypeId; // <-- Change to UUID
+    private UUID propertyTypeId; // <-- Change to UUID
 }

@@ -6,12 +6,13 @@ import lombok.Data;
 import vn.com.bds.domain.model.Post;
 
 import java.time.Instant;
+import java.util.UUID;
 
 // DTO này định nghĩa JSON trả về cho client
 @Data
 @Builder
 public class PostResponse {
-    private Long id;
+    private UUID id;
     private String title;
     private String address;
     private java.math.BigDecimal price;

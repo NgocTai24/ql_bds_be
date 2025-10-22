@@ -6,12 +6,13 @@ import lombok.Data;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 // Đây là bài đăng BĐS
 @Data
 @Builder
 public class Post {
-    private Long id;
+    private UUID id;
     private String title;
     private String description;
     private String address;
