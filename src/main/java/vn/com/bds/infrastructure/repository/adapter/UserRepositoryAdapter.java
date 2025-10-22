@@ -8,7 +8,9 @@ import vn.com.bds.infrastructure.repository.datajpa.UserSpringDataRepository;
 import vn.com.bds.infrastructure.repository.entity.UserEntity;
 import vn.com.bds.infrastructure.repository.mapper.UserMapper;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository // Đánh dấu đây là 1 Bean và là Adapter Repository
 @RequiredArgsConstructor
@@ -38,4 +40,24 @@ public class UserRepositoryAdapter implements UserRepository {
         return springDataRepository.findByEmail(email)
                 .map(UserMapper::toDomain);
     }
+
+    @Override
+    public void deleteById(Long id) {
+        springDataRepository.deleteById(id);
+    }
+
+    @Override
+    public boolean existsById(Long id) {
+        return springDataRepository.existsById(id);
+    }
+    @Override
+    public List<User> findAll() {
+        // 1. Gọi hàm findAll() của Spring Data JPA (trả về List<UserEntity>)
+        return springDataRepository.findAll().stream()
+                // 2. Dùng map để chuyển từng UserEntity sang User (domain model)
+                .map(UserMapper::toDomain)
+                // 3. Thu thập kết quả thành List<User>
+                .collect(Collectors.toList());
+    }
+
 }

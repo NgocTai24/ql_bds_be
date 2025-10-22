@@ -6,24 +6,30 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import vn.com.bds.domain.repository.ImageStorageRepository;
 
-import java.io.InputStream;
+// import java.io.InputStream; // <-- XÓA IMPORT NÀY
+import java.io.IOException; // <-- THÊM IMPORT NÀY
 import java.util.Map;
 
-@Component // Báo cho Spring biết đây là 1 Bean
-@RequiredArgsConstructor // Tự động inject Cloudinary bean
+@Component
+@RequiredArgsConstructor
 public class CloudinaryImageStorageAdapter implements ImageStorageRepository {
 
-    private final Cloudinary cloudinary; // Cloudinary SDK bean
+    private final Cloudinary cloudinary;
 
     @Override
-    public String upload(InputStream fileStream, String fileName) {
+    // SỬA LẠI THAM SỐ VÀ THÊM "throws IOException"
+    public String upload(byte[] fileBytes, String fileName) throws IOException {
         try {
-            // Sử dụng SDK của Cloudinary để upload
-            Map uploadResult = cloudinary.uploader().upload(fileStream, ObjectUtils.emptyMap());
-            // Trả về URL an toàn
+            // SỬA LẠI THAM SỐ ĐẦU TIÊN KHI GỌI CLOUDINARY
+            Map uploadResult = cloudinary.uploader().upload(fileBytes, ObjectUtils.asMap("resource_type", "auto"));
+
             return uploadResult.get("secure_url").toString();
-        } catch (Exception e) {
-            // Xử lý lỗi (ví dụ: ném ra 1 exception tùy chỉnh)
+            // SỬA LẠI KIỂU EXCEPTION ĐỂ BẮT CẢ IOException
+        } catch (IOException e) { // Bắt IOException trước
+            e.printStackTrace();
+            throw e; // Ném lại IOException
+        } catch (Exception e) { // Bắt các lỗi khác
+            e.printStackTrace();
             throw new RuntimeException("Image upload failed", e);
         }
     }

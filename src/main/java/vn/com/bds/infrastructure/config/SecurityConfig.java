@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider; // <-- Import
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -12,19 +13,19 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import vn.com.bds.infrastructure.security.JwtAuthenticationFilter;
 import vn.com.bds.infrastructure.security.OAuth2LoginSuccessHandler;
 
+
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
     // Vẫn giữ các filter/handler
     private final JwtAuthenticationFilter jwtAuthFilter;
     private final OAuth2LoginSuccessHandler oAuth2LoginSuccessHandler;
-
     // Inject AuthenticationProvider (được tạo từ ApplicationConfig)
     private final AuthenticationProvider authenticationProvider;
 
-    // --- XÓA CÁC @Bean passwordEncoder, authenticationManager, authenticationProvider Ở ĐÂY ---
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {

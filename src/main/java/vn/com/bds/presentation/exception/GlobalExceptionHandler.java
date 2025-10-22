@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
     // 3. Xử lý 403 (Token sai, không có quyền truy cập)
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ApiResponse<Object>> handleAccessDeniedException(AccessDeniedException ex) {
-        return ApiResponse.error(HttpStatus.FORBIDDEN, "Access denied. You do not have permission.");
+        return ApiResponse.error(HttpStatus.FORBIDDEN, "Sai Token || Bạn Không Có Quyền");
     }
 
     // 4. Xử lý 405 (Dùng GET thay vì POST, v.v.)
