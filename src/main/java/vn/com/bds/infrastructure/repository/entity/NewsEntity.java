@@ -7,14 +7,15 @@ import lombok.Data;
 import vn.com.bds.domain.model.NewsStatus;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @Entity
 @Table(name = "news")
 public class NewsEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID) // <-- Bảo DB tự sinh UUID
+    private UUID id;
 
     @Column(nullable = false)
     private String title;

@@ -5,12 +5,13 @@ import lombok.Data;
 import vn.com.bds.domain.model.NewsStatus;
 
 import java.time.Instant;
+import java.util.UUID;
 
 // Model cho Tin tức (bảng news)
 @Data
 @Builder
 public class News {
-    private Long id;
+    private UUID id;
     private String title;
     private String content; // Nội dung tin tức (có thể là HTML/Markdown)
     private String imageUrl; // Ảnh bìa của tin tức

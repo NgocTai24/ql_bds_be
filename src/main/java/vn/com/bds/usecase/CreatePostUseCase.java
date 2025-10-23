@@ -15,7 +15,7 @@ public interface CreatePostUseCase {
         String address;
         BigDecimal price; // Use BigDecimal for price
         Double squareMeters;
-        Long userId; // User ID remains Long
+        UUID userId; // User ID remains Long
         UUID listingTypeId; // <-- Change to UUID
         UUID propertyTypeId; // <-- Change to UUID
     }

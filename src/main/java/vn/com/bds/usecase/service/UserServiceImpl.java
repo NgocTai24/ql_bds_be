@@ -11,6 +11,7 @@ import vn.com.bds.usecase.*;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 
 @Service // Báo cho Spring biết đây là Bean
 @RequiredArgsConstructor
@@ -32,7 +33,7 @@ public class UserServiceImpl implements GetMyProfileUseCase, GetUserByIdUseCase,
     // 2. Triển khai GetUserById
     @Override
     @Transactional(readOnly = true)
-    public User execute(Long id) {
+    public User execute(UUID id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
     }
@@ -69,7 +70,7 @@ public class UserServiceImpl implements GetMyProfileUseCase, GetUserByIdUseCase,
 
     // --- TRIỂN KHAI HÀM DELETE ---
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(UUID id) {
         // 1. Kiểm tra xem user có tồn tại không
         if (!userRepository.existsById(id)) {
             throw new ResourceNotFoundException("User not found with id: " + id);

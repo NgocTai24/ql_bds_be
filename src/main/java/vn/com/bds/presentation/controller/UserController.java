@@ -15,6 +15,7 @@ import org.springframework.http.MediaType;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -50,7 +51,7 @@ public class UserController {
      * API 2: Lấy thông tin CÔNG KHAI của 1 user bất kỳ bằng ID
      */
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<UserDto>> getUserById(@PathVariable UUID id) {
         User userModel = getUserByIdUseCase.execute(id);
         UserDto userDto = UserDto.fromModel(userModel);
         return ApiResponse.success(userDto, "Get user successfully");
@@ -96,7 +97,7 @@ public class UserController {
     @DeleteMapping("/{id}")
     // Chỉ cho phép user có quyền 'ADMIN' gọi API này
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> deleteUser(@PathVariable UUID id) {
         deleteUserUseCase.deleteById(id);
         // Trả về 200 OK với message (hoặc 204 No Content nếu muốn)
         return ApiResponse.success("User deleted successfully");

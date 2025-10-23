@@ -4,14 +4,15 @@ package vn.com.bds.infrastructure.repository.entity;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @Entity
 @Table(name = "comments")
 public class CommentEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID) // <-- Bảo DB tự sinh UUID
+    private UUID id;
 
     @Lob
     private String content;

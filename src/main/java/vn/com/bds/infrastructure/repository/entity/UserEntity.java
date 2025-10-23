@@ -6,14 +6,15 @@ import vn.com.bds.domain.model.Role;
 import vn.com.bds.domain.model.Role;
 
 import java.time.Instant;
+import java.util.UUID;
 
 @Data
 @Entity
 @Table(name = "users")
 public class UserEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID) // <-- Bảo DB tự sinh UUID
+    private UUID id;
 
     private String fullname;
 

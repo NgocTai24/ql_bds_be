@@ -5,12 +5,13 @@ import lombok.Data;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 // Model cho Bình luận (bảng comments)
 @Data
 @Builder
 public class Comment {
-    private Long id;
+    private UUID id;
     private String content; // Nội dung bình luận
     private Instant createdAt;
 

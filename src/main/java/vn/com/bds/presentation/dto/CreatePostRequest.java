@@ -11,7 +11,7 @@ public class CreatePostRequest {
     private String address;
     private BigDecimal price; // Use BigDecimal
     private Double squareMeters;
-    private Long userId;
+    private UUID userId;
     private UUID listingTypeId; // <-- Change to UUID
     private UUID propertyTypeId; // <-- Change to UUID
 }

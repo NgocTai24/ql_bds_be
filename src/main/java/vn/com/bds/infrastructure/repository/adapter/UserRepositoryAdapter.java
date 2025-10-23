@@ -10,6 +10,7 @@ import vn.com.bds.infrastructure.repository.mapper.UserMapper;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Repository // Đánh dấu đây là 1 Bean và là Adapter Repository
@@ -30,7 +31,7 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
-    public Optional<User> findById(Long id) {
+    public Optional<User> findById(UUID id) {
         return springDataRepository.findById(id)
                 .map(UserMapper::toDomain); // .map(entity -> UserMapper.toDomain(entity))
     }
@@ -42,12 +43,12 @@ public class UserRepositoryAdapter implements UserRepository {
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(UUID id) {
         springDataRepository.deleteById(id);
     }
 
     @Override
-    public boolean existsById(Long id) {
+    public boolean existsById(UUID id) {
         return springDataRepository.existsById(id);
     }
     @Override
@@ -60,4 +61,8 @@ public class UserRepositoryAdapter implements UserRepository {
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public int count() { // Matches your interface declaration
+        return (int) springDataRepository.count(); // Cast long to int
+    }
 }

@@ -4,12 +4,13 @@ import lombok.Builder;
 import lombok.Data;
 
 import java.time.Instant;
+import java.util.UUID;
 
 // Model cho Đánh giá (bảng ratings)
 @Data
 @Builder
 public class Rating {
-    private Long id;
+    private UUID id;
     private int stars; // Số sao (ví dụ: 1, 2, 3, 4, 5)
     private Instant createdAt;
 

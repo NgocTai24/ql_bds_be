@@ -5,10 +5,12 @@ import lombok.Data;
 import vn.com.bds.domain.model.Role;
 import vn.com.bds.domain.model.User;
 
+import java.util.UUID;
+
 @Data
 @Builder
 public class UserDto {
-    private Long id;
+    private UUID id;
     private String fullname;
     private String email;
     private String phone;

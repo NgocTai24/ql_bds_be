@@ -5,11 +5,12 @@ import lombok.Data;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Builder
 public class User {
-    private Long id;
+    private UUID id;
     private String fullname;
     private String email;
     private String password;
