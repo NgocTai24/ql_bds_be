@@ -44,4 +44,9 @@ public class PostRepositoryAdapter implements PostRepository {
     public void deleteById(UUID id) { // <-- Sửa thành UUID
         springDataRepository.deleteById(id);
     }
+
+    @Override
+    public boolean existsById(UUID id) {
+        return springDataRepository.existsById(id);
+    }
 }

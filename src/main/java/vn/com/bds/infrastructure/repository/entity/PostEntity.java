@@ -57,7 +57,7 @@ public class PostEntity {
     private PropertyTypeEntity propertyType;
 
     // Một bài Post có nhiều Image
-    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY) // KIỂM TRA DÒNG NÀY
     private List<ImageEntity> images;
 
     // Một bài Post có nhiều Comment
@@ -78,4 +78,6 @@ public class PostEntity {
     protected void onUpdate() {
         updatedAt = Instant.now();
     }
+
+
 }

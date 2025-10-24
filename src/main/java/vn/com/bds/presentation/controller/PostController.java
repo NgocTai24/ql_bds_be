@@ -2,43 +2,129 @@ package vn.com.bds.presentation.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 import vn.com.bds.domain.model.Post;
-import vn.com.bds.presentation.dto.CreatePostRequest;
-import vn.com.bds.presentation.dto.PostResponse;
-import vn.com.bds.usecase.CreatePostUseCase;
+import vn.com.bds.presentation.dto.ApiResponse;
+import vn.com.bds.presentation.dto.PostDto; // Import all DTOs
+import vn.com.bds.usecase.ManagePostUseCase;
+
+import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/v1/posts") // Đặt tiền tố chung cho API
+@RequestMapping("/posts") // Using /posts as base
 @RequiredArgsConstructor
 public class PostController {
 
-    // Controller CHỈ inject các interface (cổng) từ USECASE
-    private final CreatePostUseCase createPostUseCase;
+    private final ManagePostUseCase managePostUseCase;
 
-    @PostMapping
-    public ResponseEntity<PostResponse> createPost(@RequestBody CreatePostRequest request) {
+    // --- GET APIs ---
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<PostDto>>> getAllPosts() {
+        List<Post> models = managePostUseCase.getAllPosts();
+        List<PostDto> dtos = models.stream().map(PostDto::fromModel).collect(Collectors.toList());
+        return ApiResponse.success(dtos, "Posts fetched successfully");
+    }
 
-        // 1. Chuyển đổi DTO (API) sang Command (UseCase)
-        CreatePostUseCase.CreatePostCommand command = CreatePostUseCase.CreatePostCommand.builder()
-                .title(request.getTitle())
-                .description(request.getDescription())
-                .address(request.getAddress())
-                .price(request.getPrice())
-                .squareMeters(request.getSquareMeters())
-                .userId(request.getUserId())
-                .listingTypeId(request.getListingTypeId())
-                .propertyTypeId(request.getPropertyTypeId())
+    @GetMapping("/{id}")
+    public ResponseEntity<ApiResponse<PostDto>> getPostById(@PathVariable UUID id) {
+        Post model = managePostUseCase.getPostById(id);
+        // Call fromModel FIRST to get the DTO object
+        PostDto dto = PostDto.fromModel(model);
+        // Pass the DTO object to ApiResponse.success
+        return ApiResponse.success(dto, "Post fetched successfully");
+    }
+
+    // --- POST API (Create) ---
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAuthenticated()") // Any logged-in user can create
+    public ResponseEntity<ApiResponse<PostDto>> createPost(
+            @AuthenticationPrincipal UserDetails userDetails,
+            // Receive fields via @RequestParam for form-data
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam("address") String address,
+            @RequestParam("price") BigDecimal price,
+            @RequestParam("squareMeters") Double squareMeters,
+            @RequestParam("listingTypeId") UUID listingTypeId,
+            @RequestParam("propertyTypeId") UUID propertyTypeId,
+            @RequestParam(value = "images", required = false) List<MultipartFile> images
+    ) throws IOException {
+
+        ManagePostUseCase.CreatePostCommand command = ManagePostUseCase.CreatePostCommand.builder()
+                .title(title)
+                .description(description)
+                .address(address)
+                .price(price)
+                .squareMeters(squareMeters)
+                .listingTypeId(listingTypeId)
+                .propertyTypeId(propertyTypeId)
+                .userEmail(userDetails.getUsername()) // Get email from token
+                .images(images)
                 .build();
 
-        // 2. Gọi UseCase để thực thi logic
-        Post createdPost = createPostUseCase.execute(command);
+        Post createdPost = managePostUseCase.createPost(command);
+        // Call fromModel FIRST to get the DTO object
+        PostDto dto = PostDto.fromModel(createdPost);
+        // Pass the DTO object to ApiResponse.created
+        return ApiResponse.created(dto, "Post created successfully");
+    }
 
-        // 3. Chuyển đổi Model (Domain) sang DTO (Response)
-        PostResponse response = PostResponse.fromModel(createdPost);
+    // --- PUT API (Update) ---
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PreAuthorize("isAuthenticated()") // Check ownership inside UseCase
+    public ResponseEntity<ApiResponse<PostDto>> updatePost(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails userDetails,
+            // Receive fields via @RequestParam
+            @RequestParam("title") String title,
+            @RequestParam("description") String description,
+            @RequestParam("address") String address,
+            @RequestParam("price") BigDecimal price,
+            @RequestParam("squareMeters") Double squareMeters,
+            @RequestParam("listingTypeId") UUID listingTypeId,
+            @RequestParam("propertyTypeId") UUID propertyTypeId,
+            @RequestParam(value = "newImages", required = false) List<MultipartFile> newImages
+            // @RequestParam(value = "imagesToDelete", required = false) List<UUID> imagesToDelete // Add if implementing delete
+    ) throws IOException {
 
-        // 4. Trả về 201 Created
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        ManagePostUseCase.UpdatePostCommand command = ManagePostUseCase.UpdatePostCommand.builder()
+                .title(title)
+                .description(description)
+                .address(address)
+                .price(price)
+                .squareMeters(squareMeters)
+                .listingTypeId(listingTypeId)
+                .propertyTypeId(propertyTypeId)
+                .userEmail(userDetails.getUsername())
+                .newImages(newImages)
+                // .imagesToDelete(imagesToDelete) // Add if implementing delete
+                .build();
+
+        Post updatedPost = managePostUseCase.updatePost(id, command);
+        // Call fromModel FIRST to get the DTO object
+        PostDto dto = PostDto.fromModel(updatedPost);
+        // Pass the DTO object to ApiResponse.success
+        return ApiResponse.success(dto, "Post updated successfully");
+    }
+
+    // --- DELETE API ---
+    @DeleteMapping("/{id}")
+    @PreAuthorize("isAuthenticated()") // Check ownership/admin inside UseCase
+    public ResponseEntity<ApiResponse<Void>> deletePost(
+            @PathVariable UUID id,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        managePostUseCase.deletePost(id, userDetails.getUsername());
+        return ApiResponse.success("Post deleted successfully");
     }
 }

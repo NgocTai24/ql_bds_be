@@ -7,8 +7,9 @@ import java.util.UUID; // <-- Import
 
 public interface PostRepository {
     Post save(Post post);
-    Optional<Post> findById(UUID id); // <-- Sửa thành UUID
-    List<Post> findAll();
-    void deleteById(UUID id); // <-- Sửa thành UUID
-    // boolean existsById(UUID id); // <-- Thêm nếu cần
+    Optional<Post> findById(UUID id);
+    List<Post> findAll(); // Simple version for now
+    void deleteById(UUID id);
+    boolean existsById(UUID id); // Add check
+    // You might add methods like findByUserId later
 }
