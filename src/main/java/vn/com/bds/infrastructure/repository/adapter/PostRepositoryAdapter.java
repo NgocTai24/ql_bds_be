@@ -35,6 +35,8 @@ public class PostRepositoryAdapter implements PostRepository {
 
     @Override
     public List<Post> findAll() {
+        // This now calls the @EntityGraph version from PostSpringDataRepository
+        // and PostMapper.toDomain will handle the loaded images.
         return springDataRepository.findAll().stream()
                 .map(PostMapper::toDomain)
                 .collect(Collectors.toList());

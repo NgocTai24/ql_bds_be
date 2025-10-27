@@ -27,7 +27,6 @@ public interface ManagePostUseCase {
         String address;
         BigDecimal price;
         Double squareMeters;
-        UUID listingTypeId;
         UUID propertyTypeId;
         String userEmail; // Email of the creator (from token)
         List<MultipartFile> images; // List of image files
@@ -41,10 +40,8 @@ public interface ManagePostUseCase {
         String address;
         BigDecimal price;
         Double squareMeters;
-        UUID listingTypeId;
         UUID propertyTypeId;
         String userEmail; // Email of the user updating (from token)
         List<MultipartFile> newImages; // List of *new* image files to add
-        // List<UUID> imagesToDelete; // Optional: IDs of existing images to remove
     }
 }

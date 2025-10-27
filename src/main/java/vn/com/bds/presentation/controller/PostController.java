@@ -55,7 +55,6 @@ public class PostController {
             @RequestParam("address") String address,
             @RequestParam("price") BigDecimal price,
             @RequestParam("squareMeters") Double squareMeters,
-            @RequestParam("listingTypeId") UUID listingTypeId,
             @RequestParam("propertyTypeId") UUID propertyTypeId,
             @RequestParam(value = "images", required = false) List<MultipartFile> images
     ) throws IOException {
@@ -66,7 +65,6 @@ public class PostController {
                 .address(address)
                 .price(price)
                 .squareMeters(squareMeters)
-                .listingTypeId(listingTypeId)
                 .propertyTypeId(propertyTypeId)
                 .userEmail(userDetails.getUsername()) // Get email from token
                 .images(images)
@@ -91,7 +89,6 @@ public class PostController {
             @RequestParam("address") String address,
             @RequestParam("price") BigDecimal price,
             @RequestParam("squareMeters") Double squareMeters,
-            @RequestParam("listingTypeId") UUID listingTypeId,
             @RequestParam("propertyTypeId") UUID propertyTypeId,
             @RequestParam(value = "newImages", required = false) List<MultipartFile> newImages
             // @RequestParam(value = "imagesToDelete", required = false) List<UUID> imagesToDelete // Add if implementing delete
@@ -103,7 +100,6 @@ public class PostController {
                 .address(address)
                 .price(price)
                 .squareMeters(squareMeters)
-                .listingTypeId(listingTypeId)
                 .propertyTypeId(propertyTypeId)
                 .userEmail(userDetails.getUsername())
                 .newImages(newImages)

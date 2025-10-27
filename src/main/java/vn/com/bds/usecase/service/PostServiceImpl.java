@@ -69,9 +69,9 @@ public class PostServiceImpl implements ManagePostUseCase {
     public Post createPost(CreatePostCommand command) {
         // 1. Find related domain models (for validation/linking)
         User user = findUserByEmail(command.getUserEmail());
-        ListingType listingType = findListingTypeById(command.getListingTypeId());
         PropertyType propertyType = findPropertyTypeById(command.getPropertyTypeId());
-
+        // Lấy ListingType TỪ PropertyType
+        ListingType listingType = propertyType.getListingType();
         // 2. Build Post DOMAIN MODEL (optional but can be good practice)
         Post postModel = Post.builder()
                 .title(command.getTitle())
@@ -120,9 +120,17 @@ public class PostServiceImpl implements ManagePostUseCase {
             throw new AccessDeniedException("User not authorized to update this post");
         }
 
-        // 2. Find related entities if they are being changed
-        ListingTypeEntity listingTypeEntity = ListingTypeMapper.toEntity(findListingTypeById(command.getListingTypeId()));
-        PropertyTypeEntity propertyTypeEntity = PropertyTypeMapper.toEntity(findPropertyTypeById(command.getPropertyTypeId()));
+        // 2. Find related entities based ONLY on propertyTypeId
+        // --- CORRECTED LOGIC ---
+        PropertyType propertyType = findPropertyTypeById(command.getPropertyTypeId()); // Find the PropertyType domain model
+        ListingType listingType = propertyType.getListingType(); // Get the ListingType from the PropertyType
+        if (listingType == null) { // Defensive check
+            throw new IllegalStateException("PropertyType with ID " + propertyType.getId() + " does not have an associated ListingType.");
+        }
+        // Map to Entities
+        PropertyTypeEntity propertyTypeEntity = PropertyTypeMapper.toEntity(propertyType);
+        ListingTypeEntity listingTypeEntity = ListingTypeMapper.toEntity(listingType);
+        // --- END CORRECTED LOGIC ---
 
         // 3. Update fields on the ENTITY
         existingPostEntity.setTitle(command.getTitle());
@@ -130,37 +138,31 @@ public class PostServiceImpl implements ManagePostUseCase {
         existingPostEntity.setAddress(command.getAddress());
         existingPostEntity.setPrice(command.getPrice());
         existingPostEntity.setSquareMeters(command.getSquareMeters());
-        existingPostEntity.setListingType(listingTypeEntity);
-        existingPostEntity.setPropertyType(propertyTypeEntity);
+        // Set the CORRECT entities based on the found propertyType
+        existingPostEntity.setListingType(listingTypeEntity); // Use the derived ListingTypeEntity
+        existingPostEntity.setPropertyType(propertyTypeEntity); // Use the found PropertyTypeEntity
         // existingPostEntity.setStatus(...) // If status needs update
 
         // 4. Handle image updates
         if (command.getNewImages() != null && !command.getNewImages().isEmpty()) {
-            // Upload new images and link them TO THE EXISTING PostEntity
             List<ImageEntity> addedImageEntities = uploadAndCreateImageEntities(command.getNewImages(), existingPostEntity);
             if (existingPostEntity.getImages() == null) {
                 existingPostEntity.setImages(new ArrayList<>());
             }
-            // Add the NEW entities to the list managed by JPA
             existingPostEntity.getImages().addAll(addedImageEntities);
         }
         // --- TODO: Add logic for deleting images ---
-        // If implementing delete:
-        // 1. Find ImageEntities by IDs from command.getImagesToDelete()
-        // 2. Remove them from existingPostEntity.getImages() list (orphanRemoval=true will delete from DB)
-        // 3. Call imageStorageRepository.delete() for each removed image URL
 
         // 5. Save the updated PostEntity (CASCADE handles new/removed images)
         PostEntity updatedPostEntity = postSpringDataRepository.save(existingPostEntity);
 
         // 6. Map back to domain model
         Post updatedPost = PostMapper.toDomain(updatedPostEntity);
-        if(updatedPostEntity.getImages() != null){
+        if (updatedPostEntity.getImages() != null) {
             updatedPost.setImages(updatedPostEntity.getImages().stream().map(ImageMapper::toDomain).collect(Collectors.toList()));
         }
         return updatedPost;
     }
-
     @Override
     public void deletePost(UUID id, String currentUserEmail) {
         // Fetch PostEntity to check ownership and get image URLs

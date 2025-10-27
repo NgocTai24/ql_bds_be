@@ -52,7 +52,7 @@ public class UserSeeder implements CommandLineRunner {
             User admin = User.builder()
                     .fullname("Quản Trị Viên")
                     .email("admin@gmail.com") // Changed to @gmail.com
-                    .password(passwordEncoder.encode("admin123")) // Keep admin password separate
+                    .password(passwordEncoder.encode("123456")) // Keep admin password separate
                     .phone("0900000000")
                     .role(Role.ADMIN)
                     .avatarUrl(AVATARS.get(0))

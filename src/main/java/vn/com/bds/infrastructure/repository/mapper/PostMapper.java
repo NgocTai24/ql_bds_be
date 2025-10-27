@@ -4,6 +4,8 @@ package vn.com.bds.infrastructure.repository.mapper;
 import vn.com.bds.domain.model.Post;
 import vn.com.bds.infrastructure.repository.entity.PostEntity;
 
+import java.util.stream.Collectors;
+
 public class PostMapper {
 
     // Quy tắc: Chỉ map các trường @ManyToOne, không map @OneToMany
@@ -19,11 +21,14 @@ public class PostMapper {
                 .status(entity.getStatus())
                 .createdAt(entity.getCreatedAt())
                 .updatedAt(entity.getUpdatedAt())
-                // Map các quan hệ @ManyToOne
-                .user(UserMapper.toDomain(entity.getUser()))
-                .listingType(ListingTypeMapper.toDomain(entity.getListingType()))
-                .propertyType(PropertyTypeMapper.toDomain(entity.getPropertyType()))
-                // Không map images, comments, ratings để tránh load nặng và vòng lặp
+                .user(UserMapper.toDomain(entity.getUser())) // Assumes User is also fetched or handled
+                .listingType(ListingTypeMapper.toDomain(entity.getListingType())) // Assumes fetched
+                .propertyType(PropertyTypeMapper.toDomain(entity.getPropertyType())) // Assumes fetched
+                // --- ADD IMAGE MAPPING ---
+                .images(entity.getImages() != null ? entity.getImages().stream()
+                        .map(ImageMapper::toDomain) // Use your existing ImageMapper
+                        .collect(Collectors.toList()) : null)
+                // -------------------------
                 .build();
     }
 
