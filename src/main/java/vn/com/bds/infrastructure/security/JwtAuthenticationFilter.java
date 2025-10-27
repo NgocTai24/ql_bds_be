@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j; // Import Slf4j for logging
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -16,12 +17,14 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-@Component // Báo cho Spring biết đây là 1 Bean
+@Component
 @RequiredArgsConstructor
+@Slf4j // Add for logging
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService; // Sẽ inject UserDetailsServiceImpl
+    private final UserDetailsService userDetailsService;
+    private final TokenBlacklistService tokenBlacklistService; // <-- INJECT BLACKLIST SERVICE
 
     @Override
     protected void doFilterInternal(
@@ -34,30 +37,46 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         final String jwt;
         final String userEmail;
 
-        // 1. Kiểm tra header
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            filterChain.doFilter(request, response); // Nếu không có token, cho đi tiếp (để lọt vào các API public)
+            filterChain.doFilter(request, response);
             return;
         }
 
-        // 2. Lấy token và trích xuất email
-        jwt = authHeader.substring(7); // Bỏ "Bearer "
-        userEmail = jwtService.extractUsername(jwt);
+        jwt = authHeader.substring(7);
+        try {
+            userEmail = jwtService.extractUsername(jwt);
 
-        // 3. Nếu có email và user chưa được xác thực
-        if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
+            // If email exists and user is not yet authenticated in this request's context
+            if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
-            // 4. Nếu token hợp lệ
-            if (jwtService.isTokenValid(jwt, userDetails)) {
-                // Tạo 1 "vé" xác thực và đưa cho Spring Security quản lý
-                UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
-                        userDetails, null, userDetails.getAuthorities()
-                );
-                authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(authToken);
+                // --- ADD BLACKLIST CHECK ---
+                boolean isTokenValid = jwtService.isTokenValid(jwt, userDetails);
+                // Check blacklist *after* basic validation but *before* authentication
+                boolean isTokenBlacklisted = tokenBlacklistService.isBlacklisted(jwt);
+
+                if (isTokenValid && !isTokenBlacklisted) {
+                    // If valid and NOT blacklisted, set authentication
+                    UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
+                            userDetails, null, userDetails.getAuthorities()
+                    );
+                    authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authToken);
+                    log.debug("Authenticated user: {}", userEmail); // Optional log
+                } else if (isTokenBlacklisted) {
+                    log.warn("Attempted use of blacklisted JWT for user: {}", userEmail);
+                    // Do not set authentication, request will likely be denied later by security rules
+                }
+                // If !isTokenValid, do nothing, request will fail later
+                // --- END BLACKLIST CHECK ---
             }
+        } catch (Exception e) {
+            // Handle potential errors during token extraction/validation (e.g., expired, malformed)
+            log.warn("JWT processing error: {}", e.getMessage());
+            // Optionally, you might want to clear the security context here if partially set
+            // SecurityContextHolder.clearContext();
         }
-        filterChain.doFilter(request, response);
+
+        filterChain.doFilter(request, response); // Continue the filter chain
     }
 }
