@@ -11,17 +11,13 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import vn.com.bds.infrastructure.security.JwtService;
-import vn.com.bds.infrastructure.security.TokenBlacklistService;
 import vn.com.bds.presentation.dto.ApiResponse; // <-- IMPORT MỚI
 import vn.com.bds.presentation.dto.AuthResponse; // DTO (presentation)
 import vn.com.bds.presentation.dto.LoginRequest;
 import vn.com.bds.presentation.dto.RegisterRequest;
 import vn.com.bds.presentation.dto.UserDto; // <-- IMPORT MỚI
 import vn.com.bds.usecase.LoginUserUseCase;
-import vn.com.bds.usecase.RegisterUserUseCase; // Interface (usecase)
-import java.time.Duration; // <-- IMPORT
-import java.util.Date; // <-- IMPORT
+import vn.com.bds.usecase.RegisterUserUseCase;
 
 
 @RestController
@@ -32,8 +28,8 @@ public class AuthController {
 
     private final RegisterUserUseCase registerUserUseCase;
     private final LoginUserUseCase loginUserUseCase;
-    private final JwtService jwtService; // <-- INJECT JwtService
-    private final TokenBlacklistService tokenBlacklistService;
+
+
 
     @PostMapping("/register")
     public ResponseEntity<ApiResponse<AuthResponse>> register(@RequestBody RegisterRequest request) {
@@ -80,48 +76,33 @@ public class AuthController {
     }
 
     @PostMapping("/logout")
-    @PreAuthorize("isAuthenticated()") // Ensure only logged-in users can call this
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<ApiResponse<Object>> logout(HttpServletRequest request, HttpServletResponse response) {
 
         final String authHeader = request.getHeader("Authorization");
-        String token = null;
-        String userEmail = null;
+        String userEmail = "Unknown"; // Default if token parsing fails or isn't done
 
+        // Optional: Still extract email for logging if desired, but don't *need* JwtService
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            token = authHeader.substring(7);
-            try {
-                userEmail = jwtService.extractUsername(token); // Get user for logging
-                // Extract expiration date from the token
-                Date expirationDate = jwtService.extractClaim(token, claims -> claims.getExpiration()); // Use extractClaim
-                Date now = new Date();
-
-                // Calculate remaining duration (only blacklist if not already expired)
-                if (expirationDate != null && expirationDate.after(now)) {
-                    Duration remainingDuration = Duration.ofMillis(expirationDate.getTime() - now.getTime());
-                    // Add token to blacklist using the service
-                    tokenBlacklistService.addToBlacklist(token, remainingDuration);
-                    log.info("User {} logged out. Token blacklisted.", userEmail);
-                } else {
-                    log.warn("Logout attempt with null or already expired token for user: {}", userEmail != null ? userEmail : "Unknown");
-                }
-            } catch (Exception e) {
-                // Handle exceptions during token parsing (e.g., malformed token)
-                log.error("Error processing token during logout: {}", e.getMessage());
-                // Don't blacklist if token is invalid
-            }
-        } else {
-            log.warn("Logout attempt without Bearer token.");
+            // If you still have JwtService injected for login/register, you can use it
+            // try {
+            //     String token = authHeader.substring(7);
+            //     userEmail = jwtService.extractUsername(token);
+            // } catch (Exception e) { log.warn("Could not extract username on logout."); }
         }
 
-        // --- Clear Cookies (if you use them) ---
+        log.info("User {} requested logout.", userEmail);
+
+        // --- Clear Cookies (Keep this if you use cookies) ---
         // Cookie jwtCookie = new Cookie("jwt-token", null);
         // jwtCookie.setPath("/");
         // jwtCookie.setMaxAge(0);
         // jwtCookie.setHttpOnly(true);
         // response.addCookie(jwtCookie);
-        // log.debug("Cleared jwt-token cookie for user: {}", userEmail != null ? userEmail : "Unknown");
+        // log.debug("Cleared jwt-token cookie for user: {}", userEmail);
         // -----------------------------------
 
-        return ApiResponse.success("Logout successful. Token invalidated."); // Update message slightly
+        // Simply return success - client must discard the token
+        return ApiResponse.success("Logout successful. Please discard your token.");
     }
 }
